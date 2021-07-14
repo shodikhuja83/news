@@ -1,0 +1,46 @@
+version: "3"
+
+services:
+  newsman:
+    build:
+      context: ./..
+      dockerfile: deployments/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - ../config/config.env
+    depends_on:
+      - postgres
+    links:
+      - "postgres"
+    networks:
+      - newsman_network
+    stop_grace_period: 30s
+    stop_signal: SIGTERM
+    restart: always
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: qwerty
+      POSTGRES_DB: News
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - news_network
+    restart: always
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8081:8080"
+    networks:
+      - news_network
+    depends_on:
+      - postgres
+
+networks:
+  newsman_network:
+    driver: bridge
